@@ -4,7 +4,8 @@ Promise.all([
   faceapi.nets.tinyFaceDetector.loadFromUri("/models"),
   faceapi.nets.faceLandmark68Net.loadFromUri("/models"),
   faceapi.nets.faceRecognitionNet.loadFromUri("/models"),
-  faceapi.nets.faceExpressionNet.loadFromUri("/models")
+  faceapi.nets.faceExpressionNet.loadFromUri("/models"),
+  faceapi.nets.ageGenderNet.loadFromUri("/models")
 ]).then(startVideo);
 
 function startVideo() {
@@ -25,13 +26,46 @@ video.addEventListener("play", () => {
     const detections = await faceapi
       .detectAllFaces(video, new faceapi.TinyFaceDetectorOptions())
       .withFaceLandmarks()
-      .withFaceExpressions();
+      .withFaceExpressions()
+      .withAgeAndGender();
+
+    //console.log(detections);
+    const ageP = document.getElementById("age");
+    ageP.innerHTML = detections[0].age.toFixed(0);
+
+    const expessionP = document.getElementById("expression");
+
+    for (i = 0; i < 6; i++) {
+      var angry = detections[0].expressions.angry;
+      var disgusted = detections[0].expressions.disgusted;
+      var fearful = detections[0].expressions.fearful;
+      var happy = detections[0].expressions.happy;
+      var neutral = detections[0].expressions.neutral;
+      var sad = detections[0].expressions.sad;
+      var surprised = detections[0].expressions.surprised;
+
+      var list = [
+        { ex: "angry", value: angry },
+        { ex: "disgusted", value: disgusted },
+        { ex: "fearful", value: fearful },
+        { ex: "happy", value: happy },
+        { ex: "neutral", value: neutral },
+        { ex: "sad", value: sad },
+        { ex: "surprised", value: surprised }
+      ];
+
+      var value = list.sort((a, b) => (a.value < b.value ? 1 : -1))[0];
+      //console.log(value);
+
+      expessionP.innerHTML = value.ex;
+    }
 
     const resizedDetections = faceapi.resizeResults(detections, displaySize);
     canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
     faceapi.draw.drawDetections(canvas, resizedDetections);
     faceapi.draw.drawFaceLandmarks(canvas, resizedDetections);
     faceapi.draw.drawFaceExpressions(canvas, resizedDetections);
+    //faceapi.draw.drawAgeAndGender(canvas, resizedDetections);
     faceapi.draw.drawFaceExpressions;
   }, 100);
 });
